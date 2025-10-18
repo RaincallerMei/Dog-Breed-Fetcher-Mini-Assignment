@@ -6,8 +6,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class CachingBreedFetcherTest {
 
+    // Fix 1: Add throws declaration
     @Test
-    void testCachingAvoidsRedundantCalls() {
+    void testCachingAvoidsRedundantCalls() throws BreedFetcher.BreedNotFoundException {
         BreedFetcherForLocalTesting mock = new BreedFetcherForLocalTesting();
         CachingBreedFetcher cachingFetcher = new CachingBreedFetcher(mock);
 
@@ -19,8 +20,9 @@ class CachingBreedFetcherTest {
         assertEquals(1, mock.getCallCount(), "Fetcher should only be called once due to caching");
     }
 
+    // Fix 2: Add throws declaration (even though it uses assertThrows)
     @Test
-    void testExceptionStillPropagates() {
+    void testExceptionStillPropagates() throws BreedFetcher.BreedNotFoundException {
         BreedFetcherForLocalTesting mock = new BreedFetcherForLocalTesting();
         CachingBreedFetcher cachingFetcher = new CachingBreedFetcher(mock);
 
@@ -28,8 +30,9 @@ class CachingBreedFetcherTest {
         assertEquals(1, mock.getCallCount(), "Fetcher should be called even if breed is invalid");
     }
 
+    // Fix 3: Add throws declaration (even though it uses assertThrows)
     @Test
-    void testExceptionRepeatsCalls() {
+    void testExceptionRepeatsCalls() throws BreedFetcher.BreedNotFoundException {
         BreedFetcherForLocalTesting mock = new BreedFetcherForLocalTesting();
         CachingBreedFetcher cachingFetcher = new CachingBreedFetcher(mock);
 
@@ -38,9 +41,8 @@ class CachingBreedFetcherTest {
         assertEquals(2, mock.getCallCount(), "Fetcher should be called again even if breed is invalid");
     }
 
-    // tests that the count of API calls is correctly recorded
     @Test
-    void testCachingAvoidsRedundantCallsCheckCallsMade() {
+    void testCachingAvoidsRedundantCallsCheckCallsMade() throws BreedFetcher.BreedNotFoundException {
         BreedFetcherForLocalTesting mock = new BreedFetcherForLocalTesting();
         CachingBreedFetcher cachingFetcher = new CachingBreedFetcher(mock);
 
@@ -49,7 +51,7 @@ class CachingBreedFetcherTest {
 
         assertEquals(1, cachingFetcher.getCallsMade(),
                 "Fetcher should only be called once due to caching. " +
-                "Make sure that your implementation is recording how many calls have been made!");
+                        "Make sure that your implementation is recording how many calls have been made!");
     }
 
     @Test
@@ -57,10 +59,11 @@ class CachingBreedFetcherTest {
         BreedFetcherForLocalTesting mock = new BreedFetcherForLocalTesting();
         CachingBreedFetcher cachingFetcher = new CachingBreedFetcher(mock);
 
+        // This test only needs assertThrows, which handles the exception internally.
         assertThrows(BreedFetcher.BreedNotFoundException.class, () -> cachingFetcher.getSubBreeds("dragon"));
         assertEquals(1, cachingFetcher.getCallsMade(),
                 "Fetcher should be called even if breed is invalid. " +
-                "Make sure that your implementation is recording how many calls have been made!");
+                        "Make sure that your implementation is recording how many calls have been made!");
     }
 
     @Test
@@ -68,10 +71,11 @@ class CachingBreedFetcherTest {
         BreedFetcherForLocalTesting mock = new BreedFetcherForLocalTesting();
         CachingBreedFetcher cachingFetcher = new CachingBreedFetcher(mock);
 
+        // This test only needs assertThrows, which handles the exception internally.
         assertThrows(BreedFetcher.BreedNotFoundException.class, () -> cachingFetcher.getSubBreeds("dragon"));
         assertThrows(BreedFetcher.BreedNotFoundException.class, () -> cachingFetcher.getSubBreeds("dragon"));
         assertEquals(2, cachingFetcher.getCallsMade(),
                 "Fetcher should be called again even if breed is invalid. " +
-                "Make sure that your implementation is recording how many calls have been made!");
+                        "Make sure that your implementation is recording how many calls have been made!");
     }
 }

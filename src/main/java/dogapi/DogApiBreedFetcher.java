@@ -16,6 +16,7 @@ import java.util.*;
  */
 public class DogApiBreedFetcher implements BreedFetcher {
     private final OkHttpClient client = new OkHttpClient();
+    private static final String API_URL_BASE = "https://dog.ceo/api/breed/";
 
     /**
      * Fetch the list of sub breeds for the given breed from the dog.ceo API.
@@ -24,12 +25,45 @@ public class DogApiBreedFetcher implements BreedFetcher {
      * @throws BreedNotFoundException if the breed does not exist (or if the API call fails for any reason)
      */
     @Override
-    public List<String> getSubBreeds(String breed) {
-        // TODO Task 1: Complete this method based on its provided documentation
-        //      and the documentation for the dog.ceo API. You may find it helpful
-        //      to refer to the examples of using OkHttpClient from the last lab,
-        //      as well as the code for parsing JSON responses.
-        // return statement included so that the starter code can compile and run.
-        return new ArrayList<>();
+    public List<String> getSubBreeds(String breed) throws BreedNotFoundException {
+        String url = API_URL_BASE + breed.toLowerCase() + "/list";
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+
+            if (response.code() == 404) {
+                // The API returns 404 with a specific message for "Breed not found"
+                throw new BreedNotFoundException(breed);
+            }
+
+            // Check for general API/network errors and treat them as BreedNotFoundException
+            if (!response.isSuccessful()) {
+                throw new BreedNotFoundException(breed + " (API call failed with code " + response.code() + ")");
+            }
+
+            // Parse the JSON response body
+            String responseBody = response.body().string();
+            JSONObject json = new JSONObject(responseBody);
+            String status = json.getString("status");
+
+            if ("error".equals(status)) {
+                // If the status is 'error' for any reason other than 404 (e.g., specific error in body), treat as not found
+                throw new BreedNotFoundException(breed + " (" + json.getString("message") + ")");
+            }
+
+            JSONArray messageArray = json.getJSONArray("message");
+            List<String> subBreeds = new ArrayList<>();
+            for (int i = 0; i < messageArray.length(); i++) {
+                subBreeds.add(messageArray.getString(i));
+            }
+
+            return subBreeds;
+
+        } catch (IOException e) {
+            // Treat I/O and network errors as BreedNotFoundException as per documentation
+            throw new BreedNotFoundException(breed + " (Network/IO Error: " + e.getMessage() + ")");
+        }
     }
 }
